@@ -451,17 +451,33 @@ EOF
     # Could do a compare operation to avoid re-downloading ruby
     return false unless ruby_version
 
+
+
     installer = LanguagePack::Installers::HerokuRubyInstaller.new(
       multi_arch_stacks: MULTI_ARCH_STACKS,
-      stack: @stack,
+      # stack: @stack,
+      stack: "heroku-20",
       arch: @arch
     )
 
     @ruby_download_check = LanguagePack::Helpers::DownloadPresence.new(
       multi_arch_stacks: MULTI_ARCH_STACKS,
       file_name: ruby_version.file_name,
+      stacks: ["heroku-20"],
       arch: @arch
     )
+#<LanguagePack::Helpers::DownloadPresence:0x00007fede347fb48 @file_name="ruby-2.7.8.tgz", @stacks=["heroku-20", "heroku-22"], @fetchers=[#<LanguagePack::Fetcher:0x00007fede347f9e0 @host_url=#<Pathname:https://heroku-buildpack-ruby.s3.us-east-1.amazonaws.com/heroku-20>>, #<LanguagePack::Fetcher:0x00007fede347f4e0 @host_url=#<Pathname:https://heroku-buildpack-ruby.s3.us-east-1.amazonaws.com/heroku-22>>], @threads=[]>
+    # error(<<~HEREDOC)
+    #   Debugging  2
+    #   filename: #{@ruby_download_check.inspect}
+    # HEREDOC
+  #   error(<<~HEREDOC)
+  #   Debugging  1
+  #   ruby_version: #{ruby_version}}
+  #   @stack: #{@stack}
+  #   @arch: #{@arch}
+  #   filename: #{ruby_version.file_name}
+  # HEREDOC
     @ruby_download_check.call
 
     installer.install(ruby_version, install_path)
@@ -508,11 +524,11 @@ EOF
   rescue LanguagePack::Fetcher::FetchError
     if @ruby_download_check.does_not_exist?
       message = <<~ERROR
-        The Ruby version you are trying to install does not exist: #{ruby_version.version_for_download}
+        ZZZThe Ruby version you are trying to install does not exist: #{ruby_version.version_for_download}
       ERROR
     else
       message = <<~ERROR
-        The Ruby version you are trying to install does not exist on this stack.
+        ZZZThe Ruby version you are trying to install does not exist on this stack.
 
         You are trying to install #{ruby_version.version_for_download} on #{stack}.
 
