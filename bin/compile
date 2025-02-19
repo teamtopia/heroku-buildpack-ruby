@@ -45,6 +45,8 @@ echo "Export environment variables for the build process" | indent
 export PATH="$BUILD_DIR/vendor/openssl/bin:$PATH"
 export LD_LIBRARY_PATH="$BUILD_DIR/vendor/openssl/lib:$LD_LIBRARY_PATH"
 export OPENSSL_DIR="$BUILD_DIR/vendor/openssl"
+export SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
+export SSL_CERT_DIR="/etc/ssl/certs"
 
 # 4) Write a .profile.d script so these env vars exist at *runtime*
 echo "Write a .profile.d script so these env vars exist at runtime" | indent
@@ -53,6 +55,8 @@ cat <<EOF > "$BUILD_DIR/.profile.d/openssl.sh"
 export PATH="\$HOME/vendor/openssl/bin:\$PATH"
 export LD_LIBRARY_PATH="\$HOME/vendor/openssl/lib:\$LD_LIBRARY_PATH"
 export OPENSSL_DIR="\$HOME/vendor/openssl"
+export SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
+export SSL_CERT_DIR="/etc/ssl/certs"
 alias ll='ls -alh'
 EOF
 
