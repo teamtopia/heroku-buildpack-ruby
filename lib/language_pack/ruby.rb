@@ -451,15 +451,22 @@ EOF
     # Could do a compare operation to avoid re-downloading ruby
     return false unless ruby_version
 
+
+
     installer = LanguagePack::Installers::HerokuRubyInstaller.new(
       multi_arch_stacks: MULTI_ARCH_STACKS,
-      stack: @stack,
+      # stack: @stack,
+      stack: "heroku-20",
       arch: @arch
     )
 
+    # Note: We pass the stacks parameter to override DownloadPresence's default of STACKS = ['heroku-20', 'heroku-22']
+    # we do this to ensure the heroku-22 presense check doesn't fail as we want to only download the heroku-20 ruby binary
+    # Example from debugging: <LanguagePack::Helpers::DownloadPresence:0x00007fede347fb48 @file_name="ruby-2.7.8.tgz", @stacks=["heroku-20", "heroku-22"], @fetchers=[#<LanguagePack::Fetcher:0x00007fede347f9e0 @host_url=#<Pathname:https://heroku-buildpack-ruby.s3.us-east-1.amazonaws.com/heroku-20>>, #<LanguagePack::Fetcher:0x00007fede347f4e0 @host_url=#<Pathname:https://heroku-buildpack-ruby.s3.us-east-1.amazonaws.com/heroku-22>>], @threads=[]>
     @ruby_download_check = LanguagePack::Helpers::DownloadPresence.new(
       multi_arch_stacks: MULTI_ARCH_STACKS,
       file_name: ruby_version.file_name,
+      stacks: ["heroku-20"],
       arch: @arch
     )
     @ruby_download_check.call
@@ -508,13 +515,13 @@ EOF
   rescue LanguagePack::Fetcher::FetchError
     if @ruby_download_check.does_not_exist?
       message = <<~ERROR
-        The Ruby version you are trying to install does not exist: #{ruby_version.version_for_download}
+        The Ruby version you are trying to install does not exist: #{ruby_version.version_for_download} - if this is 2.7.8, check the buildpack code.
       ERROR
     else
       message = <<~ERROR
         The Ruby version you are trying to install does not exist on this stack.
 
-        You are trying to install #{ruby_version.version_for_download} on #{stack}.
+        You are trying to install #{ruby_version.version_for_download} on #{stack} - if this is 2.7.8, check the buildpack code..
 
         Ruby #{ruby_version.version_for_download} is present on the following stacks:
 

@@ -34,7 +34,12 @@ ruby_url() {
     arch=$(dpkg --print-architecture)
     echo "${BUILDPACK_VENDOR_URL:-https://heroku-buildpack-ruby.s3.us-east-1.amazonaws.com}/$stack/$arch/ruby-$version.tgz"
   else
-    echo "${BUILDPACK_VENDOR_URL:-https://heroku-buildpack-ruby.s3.us-east-1.amazonaws.com}/$stack/ruby-$version.tgz"
+    if [ "$version" == "2.7.8" ]; then
+      # stack="heroku-20"
+      echo "${BUILDPACK_VENDOR_URL:-https://heroku-buildpack-ruby.s3.us-east-1.amazonaws.com}/heroku-20/ruby-$version.tgz"
+    else
+      echo "${BUILDPACK_VENDOR_URL:-https://heroku-buildpack-ruby.s3.us-east-1.amazonaws.com}/$stack/ruby-$version.tgz"
+    fi
   fi
 }
 

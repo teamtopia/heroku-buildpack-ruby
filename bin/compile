@@ -8,8 +8,61 @@ ENV_DIR=$3
 BIN_DIR=$(cd "$(dirname "$0")" || exit; pwd) # absolute path
 BUILDPACK_DIR=$(dirname "$BIN_DIR")
 
+function indent() {
+  c='s/^/       /'
+  case $(uname) in
+    Darwin) sed -l "$c";;
+    *)      sed -u "$c";;
+  esac
+}
+
+arrow() {
+  sed -u 's/^/-----> /'
+}
+
 # shellcheck source=bin/support/bash_functions.sh
 source "$BIN_DIR/support/bash_functions.sh"
+
+echo "installing precompiled OpenSSL version 1.1.1w that's included in this buildpack" | arrow
+
+# 1) Copy prebuilt OpenSSL from buildpack's 'build' folder into /tmp
+OPENSSL_1_1_1W_FILE="$BUILDPACK_DIR/build/openssl-1.1.1w-heroku.tar.gz"
+echo "copy $OPENSSL_1_1_1W_FILE to /tmp" | indent
+TMP_OPENSSL_GZIP_FILE="/tmp/openssl.tar.gz"
+echo cp $OPENSSL_1_1_1W_FILE $TMP_OPENSSL_GZIP_FILE | indent
+cp $OPENSSL_1_1_1W_FILE $TMP_OPENSSL_GZIP_FILE
+
+# 2) Extract to /tmp, then move into /app/vendor (i.e., BUILD_DIR/vendor)
+TMP_OPENSSL_DIR="/tmp/openssl"
+echo "extract to $TMP_OPENSSL_DIR" | indent
+mkdir -p "$TMP_OPENSSL_DIR"
+tar -xzf $TMP_OPENSSL_GZIP_FILE -C $TMP_OPENSSL_DIR
+echo "move to $BUILD_DIR/vendor/openssl" | indent
+mv /tmp/openssl/app/vendor/openssl "$BUILD_DIR/vendor/openssl"
+
+# 3) Export environment variables for the *build* process
+echo "Export environment variables for the build process" | indent
+export PATH="$BUILD_DIR/vendor/openssl/bin:$PATH"
+export LD_LIBRARY_PATH="$BUILD_DIR/vendor/openssl/lib:$LD_LIBRARY_PATH"
+export OPENSSL_DIR="$BUILD_DIR/vendor/openssl"
+export SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
+export SSL_CERT_DIR="/etc/ssl/certs"
+
+# 4) Write a .profile.d script so these env vars exist at *runtime*
+echo "Write a .profile.d script so these env vars exist at runtime" | indent
+mkdir -p "$BUILD_DIR/.profile.d"
+cat <<EOF > "$BUILD_DIR/.profile.d/openssl.sh"
+export PATH="\$HOME/vendor/openssl/bin:\$PATH"
+export LD_LIBRARY_PATH="\$HOME/vendor/openssl/lib:\$LD_LIBRARY_PATH"
+export OPENSSL_DIR="\$HOME/vendor/openssl"
+export SSL_CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
+export SSL_CERT_DIR="/etc/ssl/certs"
+alias ll='ls -alh'
+EOF
+
+echo "environment variables:" | indent
+env | indent
+echo
 
 bootstrap_ruby_dir=$(install_bootstrap_ruby "$BIN_DIR" "$BUILDPACK_DIR")
 export PATH="$bootstrap_ruby_dir/bin/:$PATH"
